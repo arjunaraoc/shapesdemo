@@ -12,6 +12,18 @@
 
 // Constructor for Shape objects to hold data for all drawn objects.
 // For now they will just be defined as rectangles.
+// Global variable for image
+var curResourceCounter=0; 
+var imageObj = new Image();
+imageObj.onload = function() {
+	++curResourceCounter;
+//	alert(this.width + " " + this.height);
+};
+imageObj.src = 'images/page35-3091px-TeluguVariJanapadaKalarupalu.djvu.jpg';  
+var displayedImageWidth=0;
+var displayedImageHeight=0;   
+var horScalingFactor=0;
+var verScalingFactor=0;
 function Shape(state, x, y, w, h, fill) {
   "use strict";
   // This is a very simple and unsafe constructor. All we're doing is checking if the values exist.
@@ -134,7 +146,9 @@ function CanvasState(canvas) {
   for (i = 0; i < 8; i += 1) {
     this.selectionHandles.push(new Shape(this));
   }
-  
+  //add background image
+
+   this.img=imageObj;
   // **** Then events! ****
   
   // This is an example of a closure!
@@ -337,15 +351,64 @@ CanvasState.prototype.clear = function() {
 // It only ever does something if the canvas gets invalidated by our code
 CanvasState.prototype.draw = function() {
   "use strict";
-  var ctx, shapes, l, i, shape, mySel;
+  var ctx, shapes, l, i, shape, mySel,img;
   // if our state is invalid, redraw and validate!
   if (!this.valid) {
     ctx = this.ctx;
     shapes = this.shapes;
+    img=this.img;
     this.clear();
-    
+    //log shape location
+    console.log("Scaled image width, height:",displayedImageWidth,displayedImageHeight);
+    console.log("Ext Image location:", shapes[0].x,shapes[0].y);
+    console.log("Ext extents:",shapes[0].w,shapes[0].h);
+    //output Template text
+//{{Css image crop
+//|Image   =TeluguVariJanapadaKalarupalu.djvu
+//|Page    = 35
+//|bSize   = 351
+//|cWidth  = 274
+//|cHeight = 165
+//|oTop    =210
+//|oLeft   = 17
+//|Location = center
+//|Description    = 
+//}}
+
+
+   console.log('{{Css image crop');
+   console.log("|Image = %s",imageObj.src);
+   console.log("|Page    = 1");
+   console.log("|bSize   = %d",displayedImageWidth);
+   console.log("|cWidth  = %d",shapes[0].w);
+   console.log("|cHeight = %d",shapes[0].h);
+   console.log("|oTop    = %d",shapes[0].y);
+   console.log("|oLeft   = %d",shapes[0].x);
+   console.log("|Location = center");
+   console.log("|Description    = ");
+   console.log("}}"); 
+
     // ** Add stuff you want drawn in the background all the time here **
+    //*** Background picture on which graphic part is to be selected**
+    if (curResourceCounter>0)
+ // if height is more than width make height is equal to canvas height
+    if (img.height>= img.width) {
+        displayedImageHeight=this.height;
+        verScalingFactor=this.height/img.height;
+        displayedImageWidth=Math.round(verScalingFactor*img.width);
+        horScalingFactor=verScalingFactor;
+    }else{
+			displayedImageWidth=this.width;
+			horScalingFactor=this.width/img.width;
+			displayedImageHeight=Math.round(horScalingFactor*img.height);
+			verScalingFactor=horScalingFactor;    	
+    	}
     
+ // if width is more than height  make width equal to canvas height
+ 
+	  ctx.drawImage(img, 0, 0,displayedImageWidth,displayedImageHeight);   
+
+
     // draw all shapes
     l = shapes.length;
     for (i = 0; i < l; i += 1) {
@@ -406,12 +469,15 @@ CanvasState.prototype.getMouse = function(e) {
 
 function init() {
   "use strict";
+
   var s = new CanvasState(document.getElementById('canvas1'));
+
   // add a large green rectangle
   s.addShape(new Shape(s, 260, 70, 60, 65, 'rgba(0,205,0,0.7)'));
+
   // add a green-blue rectangle
-  s.addShape(new Shape(s, 240, 120, 40, 40, 'rgba(2,165,165,0.7)'));  
+//  s.addShape(new Shape(s, 240, 120, 40, 40, 'rgba(2,165,165,0.7)'));  
   // add a smaller purple rectangle
-  s.addShape(new Shape(s, 5, 60, 25, 25, 'rgba(150,150,250,0.7)'));
+//  s.addShape(new Shape(s, 5, 60, 25, 25, 'rgba(150,150,250,0.7)'));
 }
 
